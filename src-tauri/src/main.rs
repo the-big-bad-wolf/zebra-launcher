@@ -8,7 +8,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use tauri::Manager;
+use tauri::{AppHandle, Manager, RunEvent};
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -40,14 +40,21 @@ fn main() {
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 loop {
-                    let log_msg = zebrad_log_receiver.recv().await;
-                    app_handle.trigger_global("log", log_msg);
+                    if let Some(output) = zebrad_log_receiver.recv().await {
+                        app_handle.emit("log", output.clone()).unwrap();
+                    }
                 }
             });
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![greet])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .unwrap()
+        .run(move |app_handle: &AppHandle, _event| {
+            if let RunEvent::Exit = &_event {
+                zebrad.kill().expect("could not kill zebrad process");
+                app_handle.exit(0);
+            }
+        });
 }
