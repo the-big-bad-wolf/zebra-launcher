@@ -3,8 +3,8 @@ import { listen, Event, UnlistenFn } from "@tauri-apps/api/event";
 import { createSignal, onCleanup, onMount, For } from "solid-js";
 import { styled } from "solid-styled-components";
 
-import { EXAMPLE_LOGS } from "./tests/example_logs";
-import { MAX_NUM_LOG_LINES, NAVIGATION_BAR_HEIGHT } from "./constants";
+import { EXAMPLE_LOGS } from "../tests/example_logs";
+import { MAX_NUM_LOG_LINES } from "../constants";
 
 const LogContainer = styled("div")`
   display: flex;
@@ -12,7 +12,6 @@ const LogContainer = styled("div")`
   flex-direction: column;
   justify-content: end;
   padding: 4px;
-  margin-top: ${NAVIGATION_BAR_HEIGHT};
 `;
 
 const LogLine = styled("div")`
@@ -100,7 +99,6 @@ const Logs = () => {
     onCleanup(() => stop_listening());
   } else {
     let example_log_index = 0;
-    // const interval =
     setInterval(() => {
       const was_at_bottom = is_at_bottom();
 
