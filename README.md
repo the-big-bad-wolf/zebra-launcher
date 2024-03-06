@@ -9,8 +9,8 @@ This template should help get you started developing with Tauri, Solid and Types
 ## Setup
 
 1. Make sure all of the [Tauri prerequisites](https://beta.tauri.app/guides/prerequisites/) are installed.
-2. Install `yarn`
-3. Run `yarn` to install npm packages
-4. Run `yarn tauri dev` to start the Tauri app.
+2. Install `pnpm`
+3. Run `pnpm i` to install npm packages
+4. Run `pnpm tauri dev` to start the Tauri app.
 5. Add an empty `dist` folder to the root of this project to fix the Rust warning in `src-tauri/src/main.rs`
 6. Install Prettier for formatting .ts/.tsx/.css files
