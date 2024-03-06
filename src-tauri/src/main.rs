@@ -3,61 +3,66 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{
-    io::{BufRead, BufReader},
-    process::{Command, Stdio},
-};
+use std::{fs, time::Duration};
 
-use tauri::{AppHandle, Manager, RunEvent};
+use child_process::{run_zebrad, spawn_logs_emitter, zebrad_config_path};
+use tauri::{ipc::InvokeError, AppHandle, Manager, RunEvent};
 
-mod process;
-use process::relative_command_path;
+mod child_process;
+mod state;
 
-// TODO: Add a command for updating the config and restarting `zebrad` child process
+use state::AppState;
+
 #[tauri::command]
-fn save_config() {}
+async fn save_config(app_handle: AppHandle, new_config: String) -> Result<String, InvokeError> {
+    tracing::info!("dropping and killing zebrad child process");
+    app_handle.state::<AppState>().kill_zebrad_child();
+    let zebrad_config_path = zebrad_config_path();
+
+    tracing::info!("reading old config");
+    let old_config_contents = fs::read_to_string(&zebrad_config_path)
+        .map_err(|err| format!("could not read existing config file, error: {err}"))?;
+
+    tracing::info!("writing new config");
+    fs::write(zebrad_config_path, new_config)
+        .map_err(|err| format!("could not write to config file, error: {err}"))?;
+
+    tracing::info!("waiting for old zebrad child process to shutdown");
+    tokio::time::sleep(Duration::from_secs(5)).await;
+
+    tracing::info!("starting new zebrad child process");
+    let (zebrad_child, zebrad_output_receiver) = run_zebrad();
+
+    tracing::info!("started new zebrad child process, starting output reader task");
+    app_handle
+        .state::<AppState>()
+        .insert_zebrad_child(zebrad_child);
+    spawn_logs_emitter(zebrad_output_receiver, app_handle, false);
+
+    Ok(old_config_contents)
+}
+
+#[tauri::command]
+fn read_config() -> Result<String, InvokeError> {
+    Ok(fs::read_to_string(zebrad_config_path())
+        .map_err(|err| format!("could not read existing config file, error: {err}"))?)
+}
 
 fn main() {
-    // Spawn initial zebrad process
-    let mut zebrad = Command::new(relative_command_path("zebrad").unwrap())
-        .stderr(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("zebrad should be installed as a bundled binary and should start successfully");
-
-    // Spawn a task for reading output and sending it to a channel
-    let (zebrad_log_sender, mut zebrad_log_receiver) = tokio::sync::mpsc::channel(100);
-    let zebrad_stdout = zebrad.stdout.take().expect("should have anonymous pipe");
-
-    // TODO: Use a blocking tokio/async_runtime thread? The io is blocking (reading the child process output from stdio), so
-    //       it shouldn't use a green thread
-    let _log_emitter_handle = std::thread::spawn(move || {
-        for line in BufReader::new(zebrad_stdout).lines() {
-            // Ignore send errors for now
-            let _ =
-                zebrad_log_sender.blocking_send(line.expect("zebrad logs should be valid UTF-8"));
-        }
-    });
+    let (zebrad_child, zebrad_output_receiver) = run_zebrad();
 
     tauri::Builder::default()
+        .manage(AppState::new(zebrad_child))
         .setup(|app| {
-            let app_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                loop {
-                    if let Some(output) = zebrad_log_receiver.recv().await {
-                        app_handle.emit("log", output.clone()).unwrap();
-                    }
-                }
-            });
-
+            spawn_logs_emitter(zebrad_output_receiver, app.handle().clone(), true);
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![save_config])
+        .invoke_handler(tauri::generate_handler![save_config, read_config])
         .build(tauri::generate_context!())
         .unwrap()
         .run(move |app_handle: &AppHandle, _event| {
             if let RunEvent::Exit = &_event {
-                zebrad.kill().expect("could not kill zebrad process");
+                app_handle.state::<AppState>().kill_zebrad_child();
                 app_handle.exit(0);
             }
         });

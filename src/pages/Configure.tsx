@@ -1,6 +1,10 @@
-import { css, styled } from "solid-styled-components";
-import { createForm, getValue } from "@modular-forms/solid";
-import { Checkbox } from "../components/checkbox";
+import { invoke } from "@tauri-apps/api/core";
+import { Accessor, createSignal, onMount } from "solid-js";
+import { styled } from "solid-styled-components";
+
+import hljs from "highlight.js";
+
+import { EXAMPLE_CONFIG_CONTENTS } from "../tests/example_data";
 
 const PageContainer = styled("div")`
   display: flex;
@@ -10,220 +14,138 @@ const PageContainer = styled("div")`
   font-family: sans-serif;
 `;
 
-const SubmitButton = styled("button")`
-  display: inline-block;
-  margin: 16px 0 0;
-  border-radius: 4px;
-  padding: 8px 16px;
-  background: transparent;
+const FloatingButtonContainer = styled("div")`
+  background: #1c1c1c;
+  position: fixed;
+  right: 0;
+  padding: 6px 8px 0 0;
+  border-radius: 8px;
+  box-shadow: #1c1c1c 0 0 6px 2px, #1c1c1c 0 0 12px 2px, #1c1c1c 0 0 24px 2px;
+`;
+
+const Button = styled("button")`
+  outline: none;
+  border: solid 2px white;
   color: white;
-  border: solid 1px white;
+  padding: 8px 14px;
+  margin: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
   cursor: pointer;
-`;
+  letter-spacing: 1px;
+  background: transparent;
 
-type ConsensusConfig = {
-  checkpoint_sync: boolean;
-};
-
-type NetworkConfig = {
-  listen_addr: string;
-  network: string;
-  initial_mainnet_peers: string;
-  initial_testnet_peers: string;
-  cache_dir: { enabled: boolean; custom_path?: string };
-  peerset_initial_target_size: number;
-  crawl_new_peer_interval: number;
-  max_connections_per_ip: number;
-};
-
-// Note: Interfaces don't seem to work well with @modular-forms
-type ZebradConfig = {
-  consensus: ConsensusConfig;
-  network: NetworkConfig;
-};
-
-const DEFAULT_INITIAL_VALUES = {
-  consensus: { checkpoint_sync: true },
-  network: {
-    listen_addr: "0.0.0.0:8233",
-    network: "Mainnet",
-    initial_mainnet_peers: `"dnsseed.z.cash:8233","dnsseed.str4d.xyz:8233","mainnet.seeder.zfnd.org:8233","mainnet.is.yolo.money:8233",`,
-    initial_testnet_peers: `"dnsseed.testnet.z.cash:18233","testnet.seeder.zfnd.org:18233","testnet.is.yolo.money:18233"`,
-    cache_dir: {
-      enabled: true,
-    },
-    peerset_initial_target_size: 25,
-    crawl_new_peer_interval: 61000,
-    max_connections_per_ip: 1,
-  },
-};
-
-const TextFieldLabel = styled("label")`
-  border: solid 1px #fff;
-  border-radius: 8px;
-  display: flex;
-  margin: 16px 0 0;
-`;
-
-const TextFieldLabelSpan = styled("span")`
-  display: flex;
-  padding: 8px 16px;
-  color: #fff;
-`;
-
-const TextFieldInput = styled("input")`
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  background: none;
-  color: #fff;
-  display: flex;
-  text-align: right;
-  flex-grow: 1;
-
-  &:focus-visible {
-    outline: none;
+  &:hover {
+    color: #aaa;
+    border-color: #aaa;
   }
 `;
 
+const ConfigTextArea = styled("textarea")`
+  display: flex;
+  flex-grow: 1;
+  background: none;
+  color: white;
+  padding: 0 8px;
+  resize: none;
+`;
+
+const ConfigDisplay = ({ children }: { children: Accessor<string> }) => {
+  const highlighted_code = () =>
+    hljs.highlight(children(), {
+      language: "toml",
+    }).value;
+
+  return (
+    <pre>
+      <code innerHTML={highlighted_code()} />
+    </pre>
+  );
+};
+
 const Configuration = () => {
-  // TODO: Read in this initial value from Zebra's existing config file
-  //       (Generate the default config if none exists)
-  const [config_store, { Form, Field }] = createForm<ZebradConfig>({
-    initialValues: DEFAULT_INITIAL_VALUES,
+  const is_tauri_app = window.hasOwnProperty("__TAURI_INTERNALS__");
+
+  const [config_contents, set_config_contents] = createSignal<string>("");
+  const [edited_config, set_edited_config] = createSignal<string | null>(null);
+  const [is_saving, set_is_saving] = createSignal<boolean>(false);
+
+  onMount(async () => {
+    if (is_tauri_app) {
+      set_config_contents(await invoke("read_config"));
+    } else {
+      set_config_contents(EXAMPLE_CONFIG_CONTENTS);
+    }
   });
 
-  const save_and_apply = (values: ZebradConfig) => {
-    console.log("save and apply");
-    console.log(values);
+  const save_and_apply = async () => {
+    let new_config = edited_config();
+
+    if (new_config === null) {
+      return;
+    }
+
+    set_config_contents(new_config);
+    set_edited_config(null);
+    set_is_saving(true);
+
+    if (is_tauri_app) {
+      await invoke("save_config", { newConfig: new_config });
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+    }
+
+    set_is_saving(false);
   };
+
+  const discard_changes = () => {
+    set_edited_config(null);
+  };
+
+  const start_editing = () => {
+    set_edited_config(config_contents());
+  };
+
+  const is_editable = () => edited_config() !== null;
 
   return (
     <PageContainer>
       <h1>Configuration</h1>
-      <div>
-        <Form onSubmit={save_and_apply}>
-          <h5>Consensus:</h5>
 
-          <Field name="consensus.checkpoint_sync" type="boolean">
-            {(field, props) => (
-              <Checkbox
-                {...props}
-                checked={field.value}
-                error={field.error}
-                label="Enable Checkpoint Sync"
-              />
+      {is_editable() ? (
+        <>
+          <ConfigTextArea
+            value={edited_config() || ""}
+            onChange={({ currentTarget: { value } }) =>
+              set_edited_config(value)
+            }
+          />
+          <FloatingButtonContainer>
+            <Button onClick={discard_changes}>Discard Changes</Button>
+            <Button onClick={save_and_apply}>Save & Apply</Button>
+          </FloatingButtonContainer>
+        </>
+      ) : (
+        <>
+          <ConfigDisplay>{config_contents}</ConfigDisplay>
+          <FloatingButtonContainer>
+            {is_saving() ? (
+              <span
+                style={{
+                  padding: "16px",
+                  "margin-top": "16px",
+                  display: "inline-block",
+                }}
+              >
+                Saving and restarting Zebra ...
+              </span>
+            ) : (
+              <Button onClick={start_editing}>Edit</Button>
             )}
-          </Field>
-
-          <h5>Network:</h5>
-
-          <Field name="network.listen_addr" type="string">
-            {(field, props) => (
-              <div>
-                <TextFieldLabel>
-                  <TextFieldLabelSpan class={css``}>
-                    Listen Address:
-                  </TextFieldLabelSpan>
-                  <TextFieldInput
-                    {...props}
-                    type="text"
-                    value={field.value}
-                    class={css``}
-                  />
-                </TextFieldLabel>
-              </div>
-            )}
-          </Field>
-
-          <Field name="network.network" type="string">
-            {(field, props) => (
-              <div>
-                <TextFieldLabel>
-                  <TextFieldLabelSpan class={css``}>
-                    Network Type (Mainnet/Testnet):
-                  </TextFieldLabelSpan>
-                  <TextFieldInput
-                    {...props}
-                    type="text"
-                    value={field.value}
-                    class={css``}
-                  />
-                </TextFieldLabel>
-              </div>
-            )}
-          </Field>
-
-          <Field name="network.initial_mainnet_peers" type="string">
-            {(field, props) => (
-              <div>
-                <TextFieldLabel>
-                  <TextFieldLabelSpan class={css``}>
-                    Initial Mainnet Peers:
-                  </TextFieldLabelSpan>
-                  <TextFieldInput
-                    {...props}
-                    type="text"
-                    value={field.value}
-                    class={css``}
-                  />
-                </TextFieldLabel>
-              </div>
-            )}
-          </Field>
-
-          <Field name="network.initial_testnet_peers" type="string">
-            {(field, props) => (
-              <div>
-                <TextFieldLabel>
-                  <TextFieldLabelSpan class={css``}>
-                    Initial Testnet Peers:
-                  </TextFieldLabelSpan>
-                  <TextFieldInput
-                    {...props}
-                    type="text"
-                    value={field.value}
-                    class={css``}
-                  />
-                </TextFieldLabel>
-              </div>
-            )}
-          </Field>
-
-          <Field name="network.cache_dir.enabled" type="boolean">
-            {(field, props) => (
-              <Checkbox
-                {...props}
-                checked={field.value}
-                error={field.error}
-                label="Enable Initial Peer Caching"
-              />
-            )}
-          </Field>
-
-          {getValue(config_store, "network.cache_dir.enabled") ? (
-            <Field name="network.cache_dir.custom_path" type="string">
-              {(field, props) => (
-                <div>
-                  <TextFieldLabel>
-                    <TextFieldLabelSpan class={css``}>
-                      Custom Initial Peer Cache Dir (optional):
-                    </TextFieldLabelSpan>
-                    <TextFieldInput
-                      {...props}
-                      type="text"
-                      value={field.value}
-                      class={css``}
-                    />
-                  </TextFieldLabel>
-                </div>
-              )}
-            </Field>
-          ) : null}
-
-          <SubmitButton type="submit">Save & Apply</SubmitButton>
-        </Form>
-      </div>
+          </FloatingButtonContainer>
+        </>
+      )}
     </PageContainer>
   );
 };
