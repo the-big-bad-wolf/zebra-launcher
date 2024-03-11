@@ -1,6 +1,6 @@
-# Tauri + Solid + Typescript
+# Zebra App
 
-This template should help get you started developing with Tauri, Solid and Typescript in Vite.
+A Desktop app for installing and running Zebra.
 
 ## Recommended IDE Setup
 
