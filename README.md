@@ -9,7 +9,7 @@ To install the Zebra App:
 1. Download the installer for your operating system from the Github releases [here](https://github.com/ZcashFoundation/zebra-app/releases/tag/v0.0.0-alpha.1).
 2. Run the installer
 
-Note: On macOS, it currently requires an ARM-based processor such as the Apple M1.
+Note: It currently requires a 64-bit processor, and on macOS, an ARM-based processor such as the Apple M1.
 
 ## Screenshots
 
