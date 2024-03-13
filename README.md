@@ -13,9 +13,9 @@ Note: On macOS, it currently requires an ARM-based processor such as the Apple M
 
 ## Screenshots
 
-<img src="https://github.com/ZcashFoundation/zebra-app/assets/5491350/4fb8b310-15e7-47be-8650-18a24b733ebc" width="480">
+<img src="https://github.com/ZcashFoundation/zebra-app/assets/5491350/4fb8b310-15e7-47be-8650-18a24b733ebc" width="400">
 &nbsp;
-<img src="https://github.com/ZcashFoundation/zebra-app/assets/5491350/564bef27-5b82-4f1e-8e9f-af709bf48528" width="480">
+<img src="https://github.com/ZcashFoundation/zebra-app/assets/5491350/564bef27-5b82-4f1e-8e9f-af709bf48528" width="400">
 
 ## Developer Setup
 
