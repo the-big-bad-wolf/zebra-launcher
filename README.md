@@ -2,6 +2,8 @@
 
 A Desktop app for installing and running Zebra.
 
+[In-browser preview with example data](https://zebra-app-v0-zi2rzymvea-ue.a.run.app/)
+
 ## Installation
 
 To install the Zebra App:
