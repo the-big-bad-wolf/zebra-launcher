@@ -1,4 +1,4 @@
-# Zebra App
+# Zebra Launcher
 
 A Desktop app for installing and running Zebra.
 
@@ -6,7 +6,7 @@ A Desktop app for installing and running Zebra.
 
 ## Installation
 
-To install the Zebra App:
+To install the Zebra Launcher:
 
 1. Download the installer for your operating system from the Github releases [here](https://github.com/ZcashFoundation/zebra-app/releases/tag/v0.0.0-alpha.1).
 2. Run the installer
