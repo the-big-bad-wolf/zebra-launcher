@@ -23,13 +23,13 @@ pub const CONFIG_FILE: &str = "zebrad.toml";
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 #[cfg(windows)]
-pub const ZEBRAD_COMMAND_NAME: &str = "zebrad.exe";
+pub const ZEBRAD_COMMAND_NAME: &str = "zebrad-v1.7.0.exe";
 
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
 #[cfg(not(windows))]
-pub const ZEBRAD_COMMAND_NAME: &str = "zebrad";
+pub const ZEBRAD_COMMAND_NAME: &str = "zebrad-v1.7.0";
 
 pub fn zebrad_config_path() -> PathBuf {
     let exe_path =
