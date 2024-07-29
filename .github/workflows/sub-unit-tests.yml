@@ -18,6 +18,8 @@ env:
   NODE_ENV: ${{ inputs.node_env }}
   CI: true
 
+permissions: read-all
+
 jobs:
   test:
     name: Test with Node.js ${{ matrix.node }}
@@ -33,7 +35,7 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v4.1.1
 
-      - uses: pnpm/action-setup@v2.4.0
+      - uses: pnpm/action-setup@v4.0.0
 
       - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v4.0.1
