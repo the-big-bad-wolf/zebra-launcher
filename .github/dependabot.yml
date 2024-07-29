@@ -5,18 +5,43 @@ updates:
     schedule:
       interval: monthly
     commit-message:
-      prefix: "bump(deps): "
-
+      prefix: "deps(node): "
+    groups:
+      tauri:
+        patterns:
+          - "@tauri*"
+        update-types:
+        - "minor"
+        - "patch"
+      dependencies:
+        dependency-type: "production"
+        exclude-patterns:
+          - "@tauri*"
+      devDependencies: 
+        dependency-type: "development"
+        exclude-patterns:
+          - "@tauri*"
   - package-ecosystem: docker
-    directory: /
+    directory: /docker
     schedule:
       interval: monthly
     commit-message:
-      prefix: "bump(docker) "
+      prefix: "deps(docker): "
 
   - package-ecosystem: github-actions
-    directory: /.github/workflows
+    directory: "/"
     schedule:
-      interval: monthly
+      interval: weekly
     commit-message:
-      prefix: "bump(actions) "
+      prefix: "deps(actions): "
+    groups:
+      docker:
+        patterns:
+          - "docker*"
+      gcp:
+        patterns:
+          - "google-github-actions*"
+      others:
+        patterns:
+          - "*"
+
