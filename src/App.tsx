@@ -11,6 +11,7 @@ import { MAX_NUM_LOG_LINES } from "./constants";
 import { NAVIGATION_BAR_HEIGHT } from "./constants";
 import Logs from "./pages/Logs";
 import Configuration from "./pages/Configure";
+import Map from "./pages/Map";
 
 const TabNavigation = styled("header")`
   display: flex;
@@ -68,6 +69,7 @@ const AppContainer = ({ children }: RouteSectionProps) => (
     <TabNavigation>
       <NavItem href="/">Logs</NavItem>
       <NavItem href="/configure">Configure</NavItem>
+      <NavItem href="/map">Map</NavItem>
     </TabNavigation>
     <ClearFixedNavSpace />
     {children}
@@ -108,10 +110,7 @@ function App() {
     setInterval(() => {
       const was_at_bottom = is_at_bottom();
 
-      set_logs([
-        ...logs().slice(-MAX_NUM_LOG_LINES),
-        EXAMPLE_LOGS[example_log_index],
-      ]);
+      set_logs([...logs().slice(-MAX_NUM_LOG_LINES), EXAMPLE_LOGS[example_log_index]]);
 
       // TODO: check if it's the logs page? May be easier to do if this logic is moved to `AppContainer`.
       if (was_at_bottom) {
@@ -126,6 +125,7 @@ function App() {
     <Router root={AppContainer}>
       <Route path="/" component={() => <Logs logs={logs} />} />
       <Route path="/configure" component={Configuration} />
+      <Route path="/map" component={Map} />
     </Router>
   );
 }

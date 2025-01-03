@@ -1,0 +1,24 @@
+.maplibre-popup .maplibregl-popup-content {
+  padding: 0px;
+  background: black;
+  border-radius: 5px;
+}
+.maplibre-popup .maplibregl-popup-tip {
+  align-self: center;
+  border-bottom: none;
+  border-top-color: black;
+}
+
+.maplibre-popup .maplibregl-popup-close-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.maplibre-popup .maplibre-popup-close-button:hover {
+  color: #ff0000;
+}
