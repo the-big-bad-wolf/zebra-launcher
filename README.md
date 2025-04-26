@@ -1,3 +1,10 @@
+This fork adds a map to visualize the nodes you are connected to.
+
+![7cc360a391f85d38d2377ab86af861410efe53c2](https://github.com/user-attachments/assets/f263688c-030a-4725-bd0c-48537b8db402)
+
+
+
+
 # Zebra Launcher
 
 A Desktop app for installing and running Zebra.
