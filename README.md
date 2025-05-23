@@ -2,8 +2,17 @@ This fork adds a map to visualize the nodes you are connected to.
 
 ![7cc360a391f85d38d2377ab86af861410efe53c2](https://github.com/user-attachments/assets/f263688c-030a-4725-bd0c-48537b8db402)
 
+You need to enable the RPC server, and currently it does not support cookie authenthication.
+You can use the following config:
+[rpc]
+listen_addr = '127.0.0.1:8232'
+enable_cookie_auth = false
 
-
+The map will not work before finishing sync, although you can use the debug_force_finished_sync setting to bypass this.
+[rpc]
+listen_addr = '127.0.0.1:8232'
+debug_force_finished_sync = true
+enable_cookie_auth = false
 
 # Zebra Launcher
 
@@ -42,8 +51,8 @@ Note: It currently requires a 64-bit processor, and on macOS, an ARM-based proce
 ## Release
 
 - Update `zebrad` binaries for target platforms by:
-    - Running `cargo b --release` in the Zebra workspace
-    - Copying the binary into `src-tauri/binaries` and adding the target as a suffix to the file name 
+  - Running `cargo b --release` in the Zebra workspace
+  - Copying the binary into `src-tauri/binaries` and adding the target as a suffix to the file name
 - Tag and publish a new release on Github
 - Run `pnpm run tauri build` on target platforms, and
 - Upload the bundle files produced by Tauri as assets on the Github release.
