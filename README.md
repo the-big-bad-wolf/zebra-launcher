@@ -11,15 +11,6 @@ listen_addr = '127.0.0.1:8232'
 enable_cookie_auth = false
 ```
 
-The map will not work before finishing sync, although you can use the `debug_force_finished_sync` setting to bypass this:
-
-```toml
-[rpc]
-listen_addr = '127.0.0.1:8232'
-debug_force_finished_sync = true
-enable_cookie_auth = false
-```
-
 # Zebra Launcher
 
 A Desktop app for installing and running Zebra.
