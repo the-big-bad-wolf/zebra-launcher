@@ -49,7 +49,7 @@ const MapContainer = () => {
       <Map
         class="rounded-t-lg w-full h-full"
         options={{
-          style: "./src/components/NodeMap/map.json",
+          style: "/map.json",
           zoom: 1,
           maxZoom: 18,
           minZoom: 1,
